@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.github.dao.EmployeeMapper">
+	<!-- using second level cache -->
+	<cache></cache>
+
+
+	<select id="getEmps" resultType="com.github.bean.Employee">
+		select * from tbl_employee
+	</select>
+
+	<!-- if return a collection, like a List, resultType is still specified 
+		class, in other words, Mybatis output mapping is based on related method's 
+		returning type and do encapsulation -->
+	<select id="getEmpsByLastNameLike" resultType="com.github.bean.Employee">
+		select * from
+		tbl_employee where last_name like #{lastName}
+	</select>
+
+	<!-- if return a collection, like a Map, resultType could be Mybatis' defined 
+		type "map -->
+	<!-- useCache="false" means close this query's second cache -->
+	<select id="getEmpByIdReturnMap" resultType="map" useCache="false">
+		select * from
+		tbl_employee where id=#{id}
+	</select>
+
+	<!-- if return a collection, like a Map, the map has key related primary 
+		key and value related Employee object -->
+	<select id="getEmpByLastNameLikeReturnMap" resultType="com.github.bean.Employee">
+		select *
+		from tbl_employee where last_name like #{lastName}
+	</select>
+
+	<!-- multiple para query -->
+	<!-- paras encapsulated into map , key name uses param1....paramN -->
+	<select id="getEmpByIdAndLastName" resultType="com.github.bean.Employee">
+		<!-- select * from tbl_employee where id=#{param1} and last_name=#{param2} -->
+		<!-- using annotations @Param -->
+		select * from tbl_employee where id=#{id} and last_name=#{lastName}
+	</select>
+
+	<!-- using map to pass multiple parameters -->
+	<select id="getEmpByMap" resultType="com.github.bean.Employee">
+		<!-- ${} is a placeholder which is not for sql statement parameter, n other 
+			words, ${} is a "+" method, and #{} is a "?" method for sql statement -->
+		select * from ${tableName} where id=#{id} and last_name=#{lastName}
+	</select>
+
+
+	<!-- <select id="getEmpById" resultType="EmployEE"> -->
+	<!-- using annotation @alias("emp") -->
+	<select id="getEmpById" resultType="emp">
+		select * from tbl_employee
+		where id = #{id}
+	</select>
+	<!-- sql statement for Oracle -->
+	<select id="getEmpById" resultType="emp" databaseId="oracle">
+		select *
+		from tbl_employee
+		where id = #{id}
+	</select>
+
+	<!-- "parameterType can not be set here" -->
+	<!-- get system primary key(auto increase) can use jdbc statement.getGeneratedKeys(), 
+		so here I can add a para "useGeneratedKeys", then use keyProperty="id" return 
+		to bean -->
+	<insert id="addEmp" parameterType="com.github.bean.Employee"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into tbl_employee(
+		<include refid="insertColumn"></include>
+		)
+		values(#{lastName},#{gender},#{email})
+	</insert>
+
+	<!-- define repeated sql segment, using "include" to apply it -->
+	<sql id="insertColumn">
+		last_name,gender,email
+	</sql>
+
+
+	<!-- for update/delete/insert, if flushCache="true", first and second cache 
+		are all flushed -->
+	<update id="updateEmp" flushCache="true">
+		update tbl_employee
+		set
+		last_name=#{lastName},gender=#{gender},email=#{email}
+		where id=#{id}
+	</update>
+
+	<delete id="deleteEmpById">
+		delete from tbl_employee where id=#{id}
+	</delete>
+	
+	<insert id="addEmps">
+	insert into tbl_employee(last_name,gender,email) values(#{lastName},#{gender},#{email})
+	</insert>
+	
+	<insert id="addEmpHasEnum">
+	insert into tbl_employee(last_name,gender,email,empStatus) values(#{lastName},#{gender},#{email},#{empStatus})
+	</insert>
+
+
+
+</mapper>

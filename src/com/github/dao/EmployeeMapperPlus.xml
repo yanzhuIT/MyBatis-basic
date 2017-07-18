@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.github.dao.EmployeeMapperPlus">
+	<!-- resultMap demo -->
+	<resultMap type="com.github.bean.Employee" id="MyEmp">
+		<!-- column is for database, property is for bean -->
+		<id column="id" property="id" />
+		<result column="last_name" property="lastName" />
+		<!-- if no others define, means they have the same name, but all fields 
+			definition is recommended -->
+	</resultMap>
+	<!-- use resultMap to define output mapping from database to bean -->
+	<select id="getEmpById" resultMap="MyEmp">
+		select * from tbl_employee
+		where id=#{id}
+	</select>
+
+
+	<!-- using resultMap to handle cascade query -->
+	<resultMap type="com.github.bean.Employee" id="MyEmpPlus">
+		<id column="id" property="id" />
+		<result column="last_name" property="lastName" />
+		<result column="gender" property="gender" />
+		<result column="email" property="email" />
+		<!-- keep eyes for "property" using -->
+		<result column="dept_name" property="department.departmentName" />
+	</resultMap>
+
+	<!-- another cascade encapsulation -->
+	<resultMap type="com.github.bean.Employee" id="MyEmpPlus2">
+		<id column="id" property="id" />
+		<result column="last_name" property="lastName" />
+		<result column="gender" property="gender" />
+		<result column="email" property="email" />
+		<!-- *** -->
+		<association property="department" javaType="com.github.bean.Department">
+			<id column="did" property="id" />
+			<result column="dept_name" property="departmentName" />
+		</association>
+	</resultMap>
+	<!-- cascade query for multiple tables -->
+	<select id="getEmpAndDep" resultMap="MyEmpPlus2">
+		select e.id
+		id,last_name,gender,email,d.id did,dept_name from tbl_employee e,
+		tbl_dept d where e.d_id=d.id and e.id=#{id}
+	</select>
+
+	<!-- step by step -->
+	<resultMap type="com.github.bean.Employee" id="MyEmpByStep">
+		<id column="id" property="id" />
+		<result column="last_name" property="lastName" />
+		<result column="gender" property="gender" />
+		<result column="email" property="email" />
+		<association property="department"
+			select="com.github.dao.DepartmentMapper.getDepById" column="d_id">
+		</association>
+	</resultMap>
+	<select id="getEmpByIdStep" resultMap="MyEmpByStep">
+		select * from tbl_employee
+		where id=#{id}
+	</select>
+
+	<select id="getEmpsByDeptId" resultType="com.github.bean.Employee">
+		select * from
+		tbl_employee where d_id=#{id}
+	</select>
+
+	<!-- using discriminator -->
+	<resultMap type="com.github.bean.Employee" id="MyEmpByDis">
+		<id column="id" property="id" />
+		<result column="last_name" property="lastName" />
+		<result column="gender" property="gender" />
+		<result column="email" property="email" />
+		<!-- here can use string because it is a predefined alias in mybaits -->
+		<discriminator javaType="string" column="gender">
+			<case value="0" resultType="com.github.bean.Employee">
+				<association property="department"
+					select="com.github.dao.DepartmentMapper.getDepById" column="d_id">
+				</association>
+			</case>
+			<case value="1" resultType="com.github.bean.Employee">
+				<id column="id" property="id" />
+				<result column="last_name" property="lastName" />
+				<result column="gender" property="gender" />
+				<result column="last_name" property="email" />
+			</case>
+		</discriminator>
+	</resultMap>
+	<select id="getEmpByIdDis" resultMap="MyEmpByDis">
+		select * from tbl_employee
+		where id=#{id}
+	</select>
+
+</mapper>

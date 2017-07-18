@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.github.dao.EmployeeMapperDynamicSQL">
+
+	<select id="getEmpByIf" resultType="com.github.bean.Employee">
+		select * from tbl_employee
+		<!-- avoid some sql error, like id=null, then "where and ......." is not 
+			right -->
+		<!-- another method to solve "and" problem, using "where" label, but can 
+			just solve before "and" -->
+		where 1=1
+		<!-- using OGNL -->
+		<!-- here "id" refers to parameters from class parameter -->
+		<if test="id!=null">
+			and id=#{id}
+		</if>
+		<if test="lastName!=null and lastName!=''">
+			and last_name like #{lastName}
+		</if>
+		<!-- &quot; is escape character means " -->
+		<if test="email!=null and email.trim()!=&quot;&quot;">
+			and email=#{email}
+		</if>
+		<!-- OGNL is good for the expression like this -->
+		<if test="gender==0 or gender==1">
+			and gender=#{gender}
+		</if>
+	</select>
+
+	<!-- using trim label -->
+	<select id="getEmpByTrim" resultType="com.github.bean.Employee">
+		select * from tbl_employee
+		<!-- solve after "and" problem -->
+		<trim prefix="where" suffixOverrides="and">
+			<if test="id!=null">
+				id=#{id} and
+			</if>
+			<if test="lastName!=null and lastName!=''">
+				last_name like #{lastName} and
+			</if>
+			<!-- &quot; is escape character means " -->
+			<if test="email!=null and email.trim()!=&quot;&quot;">
+				email=#{email} and
+			</if>
+			<!-- OGNL is good for the expression like this -->
+			<if test="gender==0 or gender==1">
+				gender=#{gender}
+			</if>
+		</trim>
+	</select>
+
+
+	<!-- using choose label, like switch/case -->
+	<select id="getEmpByChoose" resultType="com.github.bean.Employee">
+		select * from tbl_employee
+		<where>
+			<choose>
+				<when test="id!=null">
+					id=#{id}
+				</when>
+				<when test="lastName!=null">
+					last_name like #{lastName}
+				</when>
+				<when test="email!=null">
+					email=#{email}
+				</when>
+				<when test="gender!=null">
+					gender=#{gender}
+				</when>
+				<otherwise>
+					1=1
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+
+	<update id="updateEmpBySetLabel">
+		<!-- update tbl_employee set label solve "," problem <set> <if test="lastName!=null"> 
+			last_name=#{lastName}, </if> &quot; is escape character means " <if test="email!=null"> 
+			email=#{email}, </if> OGNL is good for the expression like this <if test="gender==0 
+			or gender==1"> gender=#{gender} </if> </set> where id=#{id} -->
+
+		<!-- using trim label can also handle this -->
+		update tbl_employee
+		<trim prefix="set" suffixOverrides=",">
+			<if test="lastName!=null">
+				last_name=#{lastName},
+			</if>
+			<if test="email!=null">
+				email=#{email},
+			</if>
+			<if test="gender==0 or gender==1">
+				gender=#{gender}
+			</if>
+		</trim>
+		where id=#{id}
+	</update>
+
+	
+	<insert id="addEmps">
+		insert into tbl_employee(last_name,gender,email,d_id)
+		<foreach collection="emps" item="emp" separator=",">
+			values(#{emp.lastName},#{emp.gender},#{emp.email},#{emp.department.id})
+		</foreach>
+	</insert>
+	
+	<!-- bind,if -->
+	<select id="getEmpByIdByBind" resultType="com.github.bean.Employee">
+		<bind name="_lastName" value="'_'+lastName+'%'" />
+		select * from tbl_employee
+		<if test="_parameter!=null">
+			where last_name like #{_lastName}
+		</if>
+	</select>
+	
+
+</mapper>

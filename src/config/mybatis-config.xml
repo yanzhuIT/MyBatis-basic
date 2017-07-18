@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<properties resource="config/dbconfig.properties"></properties>
+
+
+
+	<settings>
+		<!-- attributes name in class ===> column name in table -->
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+
+		<!-- Mybatis sets null as "OTHER", this setting is for some database that 
+			cannot recognize "OTHER", like oracle -->
+		<setting name="jdbcTypeForNull" value="NULL" />
+
+		<!-- when query by "step by step", I can use this to make query efficient -->
+		<setting name="lazyLoadingEnabled" value="true" />
+		<setting name="aggressiveLazyLoading" value="false" />
+
+		<!-- open second level cache(global cache) -->
+		<setting name="cacheEnabled" value="true" />
+	</settings>
+
+
+
+
+	<!-- ******my favorite: qualified name, because I can ctrl+left buttom to 
+		trace class****** -->
+	<typeAliases>
+		<!-- if no alias, default alias is class name "employee", no difference 
+			for letter case -->
+		<typeAlias type="com.github.bean.Employee" alias="emp" />
+
+		<!-- batch for package -->
+		<!-- default alias is class name, no difference for letter ase -->
+		<package name="com.github.bean" />
+		<!-- using @alias("") before class name -->
+	</typeAliases>
+
+	<!-- change defualt type handler for enum type -->
+	<typeHandlers>
+		<!-- using mybatis' type handler -->
+		<!-- <typeHandler handler="org.apache.ibatis.type.EnumOrdinalTypeHandler"
+			javaType="com.github.bean.EmpStatus" /> -->
+
+		<!-- using self-defined type handler -->
+		<typeHandler handler="com.github.typeHandler.EmpStatusTypeHandler"
+			javaType="com.github.bean.EmpStatus" />
+	</typeHandlers>
+
+	<plugins>
+		<plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin>
+		<plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin>
+	</plugins>
+
+
+	<!-- "default" specifies the environment I want to use for now -->
+	<environments default="development">
+		<!-- I can also build a "test" environment during testing -->
+		<environment id="test">
+			<transactionManager type="JDBC" />
+			<!-- I can use self-defined dataSource which need to implement "DataSourceFactory", 
+				for example:c3p0 -->
+			<dataSource type="POOLED">
+			</dataSource>
+		</environment>
+
+		<environment id="development">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${jdbc.driver}" />
+				<property name="url" value="${jdbc.url}" />
+				<property name="username" value="${jdbc.username}" />
+				<property name="password" value="${jdbc.password}" />
+			</dataSource>
+		</environment>
+	</environments>
+
+	<!-- for different database vendors -->
+	<databaseIdProvider type="DB_VENDOR">
+		<!-- value is like alias, then can be used for sql statement in mapper.xml -->
+		<property name="Oracle" value="oracle" />
+		<property name="MySql" value="mysql" />
+		<property name="Sql Server" value="sqlserver" />
+	</databaseIdProvider>
+
+	<!-- "resource" is for classpath, "url" is for net path or disk path -->
+	<mappers>
+		<!-- <mapper resource="com/github/dao/EmployeeMapper.xml" /> <mapper resource="com/github/dao/EmployeeMapperPlus.xml" 
+			/> <mapper resource="com/github/dao/DepartmentMapper.xml" /> <mapper resource="com/github/dao/EmployeeMapperDynamicSQL.xml" 
+			/> -->
+		<!-- using "class", the value is the dao interface's qualified name meanwhile, 
+			the mapper file should have the same name and path as the dao interface file 
+			<mapper class="com.github.dao.EmployeeMapper"/> -->
+
+		<!-- another method: using annotation -->
+		<!-- <mapper class="com.github.dao.EmployeeMapperAnnotation" /> -->
+		<!-- Tips: important dao using mapper xml, others can use annotation method -->
+
+		<!-- batch method -->
+		<package name="com.github.dao" />
+
+	</mappers>
+
+</configuration>

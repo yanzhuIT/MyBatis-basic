@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.github.dao.DepartmentMapper">
+	<!-- using global cache -->
+	<cache></cache>
+
+	<select id="getDepById" resultType="com.github.bean.Department">
+		select id,dept_name as
+		departmentName from tbl_dept where id=#{id}
+	</select>
+
+
+	<resultMap type="com.github.bean.Department" id="MyDept">
+		<id column="did" property="id" />
+		<result column="dept_name" property="departmentName" />
+		<!-- cascade query: "association" is for one object, "collection" is for 
+			many objects -->
+		<collection property="list" ofType="com.github.bean.Employee">
+			<id column="eid" property="id" />
+			<result column="last_name" property="lastName" />
+			<result column="gender" property="gender" />
+			<result column="email" property="email" />
+		</collection>
+	</resultMap>
+	<select id="getDepByIdPlus" resultMap="MyDept">
+		select d.id as
+		did,dept_name,e.id as eid,last_name,gender,email
+		from tbl_employee
+		e,tbl_dept d
+		where d.id=e.d_id and d.id=#{id}
+	</select>
+
+	<!-- step by step -->
+	<resultMap type="com.github.bean.Department" id="MyDeptStep">
+		<id column="id" property="id" />
+		<result column="dept_name" property="departmentName" />
+		<collection property="list"
+			select="com.github.dao.EmployeeMapperPlus.getEmpsByDeptId" column="id">
+		</collection>
+	</resultMap>
+	<select id="getDepByIdStep" resultMap="MyDeptStep">
+		select * from tbl_dept
+		where id=#{id}
+	</select>
+
+</mapper>
